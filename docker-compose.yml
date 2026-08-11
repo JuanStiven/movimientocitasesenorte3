@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: esenorte3-db
+    restart: always
+    environment:
+      POSTGRES_DB: esenorte3_db
+      POSTGRES_USER: esenorte3_user
+      POSTGRES_PASSWORD: esenorte3_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U esenorte3_user -d esenorte3_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: esenorte3-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://esenorte3_user:esenorte3_password@db:5432/esenorte3_db
+    volumes:
+      - ./backend:/app
+      # Comentado para QA desde cero: evita auto-carga del CSV al arrancar
+      # - ./reporte001_2026-07-01_2026-07-26_0.csv:/app/reporte001_2026-07-01_2026-07-26_0.csv
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: esenorte3-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  postgres_data:
