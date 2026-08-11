@@ -42,3 +42,4 @@ El sistema incluye detección automática de columnas del insumo Excel/CSV:
 - **Columna AL**: `Estado Consulta` (FINALIZADA, EN SALA, DESCARTADA, EN BLANCO).
 - **Columna X**: `Especialidad` / `medicoespecialidad`.
 - **Alerta de Sala**: Filtra y resalta citas con más de 3 días en estado de consulta `EN SALA`.
+# movimientocitasesenorte3
