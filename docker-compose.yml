@@ -3,13 +3,13 @@ services:
     image: postgres:15-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: esenorte3_db
-      POSTGRES_USER: esenorte3_user
-      POSTGRES_PASSWORD: esenorte3_password
+      POSTGRES_DB: ${POSTGRES_DB:-esenorte3_db}
+      POSTGRES_USER: ${POSTGRES_USER:-esenorte3_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-esenorte3_password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U esenorte3_user -d esenorte3_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-esenorte3_user} -d ${POSTGRES_DB:-esenorte3_db}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -21,18 +21,18 @@ services:
       db:
         condition: service_healthy
     environment:
-      - DATABASE_URL=postgresql://esenorte3_user:esenorte3_password@db:5432/esenorte3_db
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-esenorte3_user}:${POSTGRES_PASSWORD:-esenorte3_password}@db:5432/${POSTGRES_DB:-esenorte3_db}
 
   frontend:
     build:
       context: ./frontend
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     restart: unless-stopped
     depends_on:
       - backend
     environment:
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
 volumes:
   postgres_data:
