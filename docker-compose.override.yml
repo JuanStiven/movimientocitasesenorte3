@@ -1,0 +1,16 @@
+# Override SOLO para ambiente local/desarrollo.
+# Se aplica automáticamente con `docker compose up` (Docker fusiona este archivo con docker-compose.yml).
+# Coolify/Producción NO lo usa (solo lee docker-compose.yml), por eso allá no hay puertos de host.
+services:
+  backend:
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    ports:
+      - "3000:3000"
