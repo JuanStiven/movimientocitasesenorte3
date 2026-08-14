@@ -30,17 +30,57 @@ export default function Home() {
     }
   }, [isDarkMode]);
 
-  // Filtros seleccionados para las 12 columnas especificadas
+  // Helper para construir URLSearchParams con soporte para arreglos multiselect
+  const buildQueryParams = useCallback((filterObj: any, extraParams: Record<string, string> = {}) => {
+    const params = new URLSearchParams();
+
+    Object.entries(extraParams).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') params.append(k, v);
+    });
+
+    const multiKeys = [
+      'convenionombre',
+      'estado_cita',
+      'estado_consulta',
+      'especialidad',
+      'mediconombre',
+      'pym',
+      'sede',
+      'tipocita',
+    ];
+
+    Object.entries(filterObj).forEach(([key, val]) => {
+      if (multiKeys.includes(key)) {
+        if (Array.isArray(val)) {
+          val.forEach((item) => {
+            if (item && item !== 'Todas') {
+              params.append(key, item);
+            }
+          });
+        } else if (typeof val === 'string' && val && val !== 'Todas') {
+          params.append(key, val);
+        }
+      } else if (typeof val === 'boolean') {
+        if (val) params.append(key, 'true');
+      } else if (typeof val === 'string' && val && val !== 'Todas' && val !== '') {
+        params.append(key, val);
+      }
+    });
+
+    return params;
+  }, []);
+
+  // Filtros seleccionados para las columnas del reporte
   const [filters, setFilters] = useState({
     filtro_ebs: 'Todas',
-    convenionombre: 'Todas',
-    estado_cita: 'Todas',
-    estado_consulta: 'Todas',
-    especialidad: 'Todas',
-    mediconombre: 'Todas',
-    pym: 'Todas',
-    sede: 'Todas',
-    tipocita: 'Todas',
+    convenionombre: ['Todas'],
+    estado_cita: ['Todas'],
+    estado_consulta: ['Todas'],
+    especialidad: ['Todas'],
+    mediconombre: ['Todas'],
+    pym: ['Todas'],
+    sede: ['Todas'],
+    tipocita: ['Todas'],
     nombrecompleto: '',
     fechacita_inicio: '',
     fechacita_fin: '',
@@ -62,6 +102,8 @@ export default function Home() {
   const [detailsData, setDetailsData] = useState<any>(null);
   const [detailPage, setDetailPage] = useState(1);
   const [detailSearch, setDetailSearch] = useState('');
+  const [detailSortBy, setDetailSortBy] = useState<string>('');
+  const [detailSortOrder, setDetailSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // 1. Obtener lista de filtros disponibles
   const fetchFilters = useCallback(async () => {
@@ -89,27 +131,7 @@ export default function Home() {
   const fetchOverview = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        filtro_ebs: filters.filtro_ebs,
-        convenionombre: filters.convenionombre,
-        estado_cita: filters.estado_cita,
-        estado_consulta: filters.estado_consulta,
-        especialidad: filters.especialidad,
-        mediconombre: filters.mediconombre,
-        pym: filters.pym,
-        sede: filters.sede,
-        tipocita: filters.tipocita,
-        nombrecompleto: filters.nombrecompleto,
-        fechacita_inicio: filters.fechacita_inicio,
-        fechacita_fin: filters.fechacita_fin,
-        fechadeseada_inicio: filters.fechadeseada_inicio,
-        fechadeseada_fin: filters.fechadeseada_fin,
-        fechaasignacion_inicio: filters.fechaasignacion_inicio,
-        fechaasignacion_fin: filters.fechaasignacion_fin,
-        fechaatencion_inicio: filters.fechaatencion_inicio,
-        fechaatencion_fin: filters.fechaatencion_fin,
-        solo_alertas: filters.solo_alertas.toString(),
-      });
+      const params = buildQueryParams(filters);
       const res = await apiFetch(`/api/dashboard/overview?${params.toString()}`);
       const data = await res.json();
       setOverviewData(data);
@@ -118,76 +140,52 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, buildQueryParams]);
 
   // 4. Cargar datos asistenciales
   const fetchPersonal = useCallback(async () => {
     try {
-      const params = new URLSearchParams({
-        filtro_ebs: filters.filtro_ebs,
-        convenionombre: filters.convenionombre,
-        estado_cita: filters.estado_cita,
-        estado_consulta: filters.estado_consulta,
-        especialidad: filters.especialidad,
-        mediconombre: filters.mediconombre,
-        pym: filters.pym,
-        sede: filters.sede,
-        tipocita: filters.tipocita,
-        fechacita_inicio: filters.fechacita_inicio,
-        fechacita_fin: filters.fechacita_fin,
-      });
+      const params = buildQueryParams(filters);
       const res = await apiFetch(`/api/dashboard/personal?${params.toString()}`);
       const data = await res.json();
       setPersonalData(data);
     } catch (err) {
       console.error('Error fetching personal analysis:', err);
     }
-  }, [filters]);
+  }, [filters, buildQueryParams]);
 
   // 5. Cargar Alertas (>3 días en Sala)
   const fetchAlerts = useCallback(async () => {
     try {
-      const params = new URLSearchParams({
-        filtro_ebs: filters.filtro_ebs,
-        convenionombre: filters.convenionombre,
-        especialidad: filters.especialidad,
-        mediconombre: filters.mediconombre,
-        sede: filters.sede,
-      });
+      const params = buildQueryParams(filters);
       const res = await apiFetch(`/api/dashboard/alerts?${params.toString()}`);
       const data = await res.json();
       setAlertsData(data.alerts || []);
     } catch (err) {
       console.error('Error fetching alerts:', err);
     }
-  }, [filters]);
+  }, [filters, buildQueryParams]);
 
-  // 6. Cargar Detalle paginado
+  // 6. Cargar Detalle paginado con ordenamiento global
   const fetchDetails = useCallback(async () => {
     try {
-      const params = new URLSearchParams({
+      const extraParams: Record<string, string> = {
         page: detailPage.toString(),
         limit: '25',
         search: detailSearch || filters.nombrecompleto,
-        filtro_ebs: filters.filtro_ebs,
-        convenionombre: filters.convenionombre,
-        estado_cita: filters.estado_cita,
-        estado_consulta: filters.estado_consulta,
-        especialidad: filters.especialidad,
-        mediconombre: filters.mediconombre,
-        pym: filters.pym,
-        sede: filters.sede,
-        tipocita: filters.tipocita,
-        fechacita_inicio: filters.fechacita_inicio,
-        fechacita_fin: filters.fechacita_fin,
-      });
+      };
+      if (detailSortBy) {
+        extraParams.sort_by = detailSortBy;
+        extraParams.sort_order = detailSortOrder;
+      }
+      const params = buildQueryParams(filters, extraParams);
       const res = await apiFetch(`/api/dashboard/details?${params.toString()}`);
       const data = await res.json();
       setDetailsData(data);
     } catch (err) {
       console.error('Error fetching details:', err);
     }
-  }, [detailPage, detailSearch, filters]);
+  }, [detailPage, detailSearch, detailSortBy, detailSortOrder, filters, buildQueryParams]);
 
   // Efectos de carga inicial
   useEffect(() => {
@@ -206,14 +204,14 @@ export default function Home() {
   const handleResetFilters = () => {
     setFilters({
       filtro_ebs: 'Todas',
-      convenionombre: 'Todas',
-      estado_cita: 'Todas',
-      estado_consulta: 'Todas',
-      especialidad: 'Todas',
-      mediconombre: 'Todas',
-      pym: 'Todas',
-      sede: 'Todas',
-      tipocita: 'Todas',
+      convenionombre: ['Todas'],
+      estado_cita: ['Todas'],
+      estado_consulta: ['Todas'],
+      especialidad: ['Todas'],
+      mediconombre: ['Todas'],
+      pym: ['Todas'],
+      sede: ['Todas'],
+      tipocita: ['Todas'],
       nombrecompleto: '',
       fechacita_inicio: '',
       fechacita_fin: '',
@@ -226,6 +224,8 @@ export default function Home() {
       solo_alertas: false,
     });
     setDetailSearch('');
+    setDetailSortBy('');
+    setDetailSortOrder('asc');
   };
 
   const handleFilterChange = (key: string, value: any) => {
@@ -337,6 +337,10 @@ export default function Home() {
                     setPage={setDetailPage}
                     search={detailSearch}
                     setSearch={setDetailSearch}
+                    sortBy={detailSortBy}
+                    setSortBy={setDetailSortBy}
+                    sortOrder={detailSortOrder}
+                    setSortOrder={setDetailSortOrder}
                     filters={filters}
                   />
                 )}

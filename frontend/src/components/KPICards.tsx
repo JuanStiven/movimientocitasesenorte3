@@ -16,6 +16,10 @@ interface KPICardsProps {
 }
 
 export const KPICards: React.FC<KPICardsProps> = ({ kpis }) => {
+  const totalCitas = kpis?.total_citas ?? 0;
+  const alertasCount = kpis?.alertas_sala ?? 0;
+  const alertasPct = totalCitas > 0 ? ((alertasCount / totalCitas) * 100).toFixed(1) : '0.0';
+
   const cards = [
     {
       title: 'TOTAL CITAS',
@@ -24,6 +28,7 @@ export const KPICards: React.FC<KPICardsProps> = ({ kpis }) => {
       icon: Calendar,
       accent: 'border-l-4 border-primary-600',
       iconBg: 'bg-primary-50 dark:bg-primary-950 text-primary-600 dark:text-primary-400',
+      badge: null,
     },
     {
       title: 'FINALIZADAS',
@@ -32,6 +37,7 @@ export const KPICards: React.FC<KPICardsProps> = ({ kpis }) => {
       icon: CheckCircle2,
       accent: 'border-l-4 border-emerald-600',
       iconBg: 'bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400',
+      badge: null,
     },
     {
       title: 'EN SALA',
@@ -40,6 +46,7 @@ export const KPICards: React.FC<KPICardsProps> = ({ kpis }) => {
       icon: Clock,
       accent: 'border-l-4 border-slate-600 dark:border-slate-400',
       iconBg: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300',
+      badge: null,
     },
     {
       title: 'CANCELADAS / INCUMPLIDAS',
@@ -48,14 +55,16 @@ export const KPICards: React.FC<KPICardsProps> = ({ kpis }) => {
       icon: XCircle,
       accent: 'border-l-4 border-slate-400',
       iconBg: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400',
+      badge: null,
     },
     {
-      title: 'ALERTAS (&gt;3d SALA)',
+      title: 'ALERTAS (>3d SALA)',
       value: kpis?.alertas_sala ?? 0,
-      subtitle: 'Requieren atención',
+      subtitle: `${alertasPct}% del total de citas`,
       icon: AlertTriangle,
       accent: 'border-l-4 border-rose-600',
       iconBg: 'bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400',
+      badge: `${alertasPct}%`,
     },
     {
       title: 'PROM. DÍAS ESPERA',
@@ -64,6 +73,7 @@ export const KPICards: React.FC<KPICardsProps> = ({ kpis }) => {
       icon: Activity,
       accent: 'border-l-4 border-primary-500',
       iconBg: 'bg-primary-50 dark:bg-primary-950 text-primary-600 dark:text-primary-400',
+      badge: null,
     },
   ];
 
@@ -86,8 +96,15 @@ export const KPICards: React.FC<KPICardsProps> = ({ kpis }) => {
             </div>
 
             <div className="mt-2">
-              <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                {typeof card.value === 'number' ? card.value.toLocaleString() : card.value}
+              <div className="flex items-baseline justify-between gap-1">
+                <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                  {typeof card.value === 'number' ? card.value.toLocaleString() : card.value}
+                </span>
+                {card.badge && (
+                  <span className="text-[11px] font-extrabold px-1.5 py-0.5 rounded-md bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                    {card.badge}
+                  </span>
+                )}
               </div>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
                 {card.subtitle}

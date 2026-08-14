@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { List, Search, Download, ChevronLeft, ChevronRight, CheckCircle2, Clock, AlertTriangle, ShieldAlert, User } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
+import { useSortableData } from '@/utils/useSortableData';
+import { SortableHeader } from './SortableHeader';
 
 interface DetailsTableProps {
   detailsData: {
@@ -16,6 +18,10 @@ interface DetailsTableProps {
   setPage: (p: number) => void;
   search: string;
   setSearch: (s: string) => void;
+  sortBy?: string;
+  setSortBy?: (s: string) => void;
+  sortOrder?: 'asc' | 'desc';
+  setSortOrder?: (o: 'asc' | 'desc') => void;
   filters?: any;
 }
 
@@ -25,11 +31,62 @@ export const DetailsTable: React.FC<DetailsTableProps> = ({
   setPage,
   search,
   setSearch,
+  sortBy = '',
+  setSortBy,
+  sortOrder = 'asc',
+  setSortOrder,
   filters,
 }) => {
   const [isExporting, setIsExporting] = useState(false);
+  const [jumpPage, setJumpPage] = useState<string>('');
 
-  // Exportar a CSV todos los registros filtrados llamando al endpoint con limit=100000
+  const totalRecords = detailsData?.total_records || 0;
+  const totalPages = detailsData?.total_pages || 1;
+  const records = detailsData?.data || [];
+
+  const sortConfig = sortBy ? { key: sortBy, direction: sortOrder } : null;
+
+  const handleSort = (fieldKey: string) => {
+    let nextOrder: 'asc' | 'desc' = 'asc';
+    if (sortBy === fieldKey && sortOrder === 'asc') {
+      nextOrder = 'desc';
+    }
+    if (setSortBy) setSortBy(fieldKey);
+    if (setSortOrder) setSortOrder(nextOrder);
+    setPage(1);
+  };
+
+  // Helper para generar el rango de paginación con '...'
+  const getPaginationRange = (currentPage: number, maxPages: number) => {
+    const delta = 1;
+    const range: (number | string)[] = [];
+    const rangeWithDots: (number | string)[] = [];
+    let l: number | undefined;
+
+    for (let i = 1; i <= maxPages; i++) {
+      if (i === 1 || i === maxPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+        range.push(i);
+      }
+    }
+
+    for (let i of range) {
+      if (l) {
+        if (typeof i === 'number' && i - l === 2) {
+          rangeWithDots.push(l + 1);
+        } else if (typeof i === 'number' && i - l !== 1) {
+          rangeWithDots.push('...');
+        }
+      }
+      rangeWithDots.push(i);
+      if (typeof i === 'number') l = i;
+    }
+
+    return rangeWithDots;
+  };
+
+  const paginationRange = getPaginationRange(page, totalPages);
+
+  // Exportar a CSV todos los registros filtrados llamando al endpoint
   const handleExportCSV = async () => {
     setIsExporting(true);
     try {
@@ -50,7 +107,11 @@ export const DetailsTable: React.FC<DetailsTableProps> = ({
         fechacita_fin: filters?.fechacita_fin || '',
       });
 
-      // Paginar hasta recolectar todos los registros filtrados (el API limita a 100 por página)
+      if (sortBy) {
+        params.set('sort_by', sortBy);
+        params.set('sort_order', sortOrder);
+      }
+
       const exportRows: any[] = [];
       let pageNum = 1;
       let totalRecords = 1;
@@ -133,9 +194,14 @@ export const DetailsTable: React.FC<DetailsTableProps> = ({
     }
   };
 
-  const totalRecords = detailsData?.total_records || 0;
-  const totalPages = detailsData?.total_pages || 1;
-  const records = detailsData?.data || [];
+  const handleJumpSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const target = parseInt(jumpPage, 10);
+    if (!isNaN(target) && target >= 1 && target <= totalPages) {
+      setPage(target);
+      setJumpPage('');
+    }
+  };
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors w-full min-w-0">
@@ -186,16 +252,16 @@ export const DetailsTable: React.FC<DetailsTableProps> = ({
         <table className="w-full text-left border-collapse text-xs min-w-[1000px]">
           <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold sticky top-0 border-b border-slate-200 dark:border-slate-700">
             <tr>
-              <th className="p-3 text-center">ID</th>
-              <th className="p-3">Paciente</th>
-              <th className="p-3">Especialidad</th>
-              <th className="p-3">Estado Cita</th>
-              <th className="p-3">Estado Consulta</th>
-              <th className="p-3">Filtro EBS</th>
-              <th className="p-3 text-center">Fecha Cita</th>
-              <th className="p-3 text-center">Fecha Asignación</th>
-              <th className="p-3">Médico / Profesional</th>
-              <th className="p-3">Sede</th>
+              <SortableHeader label="ID" fieldKey="id" sortConfig={sortConfig} onSort={handleSort} align="center" />
+              <SortableHeader label="Paciente" fieldKey="nombrecompleto" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader label="Especialidad" fieldKey="especialidad" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader label="Estado Cita" fieldKey="estado_cita" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader label="Estado Consulta" fieldKey="estado_consulta" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader label="Filtro EBS" fieldKey="filtro_ebs" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader label="Fecha Cita" fieldKey="fechacita_str" sortConfig={sortConfig} onSort={handleSort} align="center" />
+              <SortableHeader label="Fecha Asignación" fieldKey="fechaasignacion_str" sortConfig={sortConfig} onSort={handleSort} align="center" />
+              <SortableHeader label="Médico / Profesional" fieldKey="mediconombre" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader label="Sede" fieldKey="sede" sortConfig={sortConfig} onSort={handleSort} />
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -264,25 +330,74 @@ export const DetailsTable: React.FC<DetailsTableProps> = ({
         </table>
       </div>
 
-      {/* Paginador */}
-      <div className="p-3.5 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-          Página {page} de {totalPages} ({totalRecords} registros totales)
-        </span>
+      {/* Paginador con Números de Página, Puntos Suspensivos (...) y Salto Rápido */}
+      <div className="p-3 sm:p-3.5 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            Página <strong>{page}</strong> de <strong>{totalPages}</strong> ({totalRecords.toLocaleString()} registros)
+          </span>
 
-        <div className="flex items-center gap-2">
+          {/* Formulario de Salto de Página Directo */}
+          <form onSubmit={handleJumpSubmit} className="hidden sm:flex items-center gap-1">
+            <span className="text-[11px] text-slate-400">Ir a:</span>
+            <input
+              type="number"
+              min={1}
+              max={totalPages}
+              value={jumpPage}
+              onChange={(e) => setJumpPage(e.target.value)}
+              placeholder="#"
+              className="w-12 text-center text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded p-1 text-slate-800 dark:text-slate-200"
+            />
+          </form>
+        </div>
+
+        {/* Botones de Paginación Númericos con Puntos Suspensivos (...) */}
+        <div className="flex items-center gap-1 overflow-x-auto max-w-full">
           <button
             onClick={() => setPage(Math.max(1, page - 1))}
             disabled={page <= 1}
-            className="p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+            className="p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors mr-1"
+            title="Página Anterior"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <span className="text-xs font-bold text-slate-800 dark:text-slate-200 px-2">{page}</span>
+
+          {paginationRange.map((item, index) => {
+            if (item === '...') {
+              return (
+                <span
+                  key={`dots-${index}`}
+                  className="px-2 py-1 text-xs text-slate-400 dark:text-slate-500 font-bold select-none"
+                >
+                  ...
+                </span>
+              );
+            }
+
+            const pageNumber = item as number;
+            const isActive = pageNumber === page;
+
+            return (
+              <button
+                key={pageNumber}
+                onClick={() => setPage(pageNumber)}
+                className={`min-w-[30px] h-7 px-2 text-xs font-bold rounded-lg border transition-colors flex items-center justify-center ${
+                  isActive
+                    ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
+                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
+                }`}
+              >
+                {pageNumber}
+              </button>
+            );
+          })}
+
           <button
             onClick={() => setPage(Math.min(totalPages, page + 1))}
             disabled={page >= totalPages}
-            className="p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+            className="p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors ml-1"
+            title="Página Siguiente"
           >
             <ChevronRight className="h-4 w-4" />
           </button>

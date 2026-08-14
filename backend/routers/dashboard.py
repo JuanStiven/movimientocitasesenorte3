@@ -13,15 +13,15 @@ async def get_filters():
 
 @router.get("/overview")
 async def get_overview(
-    filtro_ebs: Optional[str] = Query(None),
-    convenionombre: Optional[str] = Query(None),
-    estado_cita: Optional[str] = Query(None),
-    estado_consulta: Optional[str] = Query(None),
-    especialidad: Optional[str] = Query(None),
-    mediconombre: Optional[str] = Query(None),
-    pym: Optional[str] = Query(None),
-    sede: Optional[str] = Query(None),
-    tipocita: Optional[str] = Query(None),
+    filtro_ebs: Optional[List[str]] = Query(None),
+    convenionombre: Optional[List[str]] = Query(None),
+    estado_cita: Optional[List[str]] = Query(None),
+    estado_consulta: Optional[List[str]] = Query(None),
+    especialidad: Optional[List[str]] = Query(None),
+    mediconombre: Optional[List[str]] = Query(None),
+    pym: Optional[List[str]] = Query(None),
+    sede: Optional[List[str]] = Query(None),
+    tipocita: Optional[List[str]] = Query(None),
     nombrecompleto: Optional[str] = Query(None),
     fechacita_inicio: Optional[str] = Query(None),
     fechacita_fin: Optional[str] = Query(None),
@@ -69,15 +69,15 @@ async def get_overview(
 
 @router.get("/personal")
 async def get_personal_analysis(
-    filtro_ebs: Optional[str] = Query(None),
-    convenionombre: Optional[str] = Query(None),
-    estado_cita: Optional[str] = Query(None),
-    estado_consulta: Optional[str] = Query(None),
-    especialidad: Optional[str] = Query(None),
-    mediconombre: Optional[str] = Query(None),
-    pym: Optional[str] = Query(None),
-    sede: Optional[str] = Query(None),
-    tipocita: Optional[str] = Query(None),
+    filtro_ebs: Optional[List[str]] = Query(None),
+    convenionombre: Optional[List[str]] = Query(None),
+    estado_cita: Optional[List[str]] = Query(None),
+    estado_consulta: Optional[List[str]] = Query(None),
+    especialidad: Optional[List[str]] = Query(None),
+    mediconombre: Optional[List[str]] = Query(None),
+    pym: Optional[List[str]] = Query(None),
+    sede: Optional[List[str]] = Query(None),
+    tipocita: Optional[List[str]] = Query(None),
     fechacita_inicio: Optional[str] = Query(None),
     fechacita_fin: Optional[str] = Query(None)
 ):
@@ -109,11 +109,11 @@ async def get_personal_analysis(
 
 @router.get("/alerts")
 async def get_alerts(
-    filtro_ebs: Optional[str] = Query(None),
-    convenionombre: Optional[str] = Query(None),
-    especialidad: Optional[str] = Query(None),
-    mediconombre: Optional[str] = Query(None),
-    sede: Optional[str] = Query(None)
+    filtro_ebs: Optional[List[str]] = Query(None),
+    convenionombre: Optional[List[str]] = Query(None),
+    especialidad: Optional[List[str]] = Query(None),
+    mediconombre: Optional[List[str]] = Query(None),
+    sede: Optional[List[str]] = Query(None)
 ):
     df = processor.get_dataframe()
     filtered_df = AnalyticsEngine.filter_dataframe(
@@ -136,15 +136,17 @@ async def get_details(
     page: int = Query(1, ge=1),
     limit: int = Query(25, ge=1, le=100),
     search: Optional[str] = Query(None),
-    filtro_ebs: Optional[str] = Query(None),
-    convenionombre: Optional[str] = Query(None),
-    estado_cita: Optional[str] = Query(None),
-    estado_consulta: Optional[str] = Query(None),
-    especialidad: Optional[str] = Query(None),
-    mediconombre: Optional[str] = Query(None),
-    pym: Optional[str] = Query(None),
-    sede: Optional[str] = Query(None),
-    tipocita: Optional[str] = Query(None),
+    sort_by: Optional[str] = Query(None),
+    sort_order: Optional[str] = Query("asc"),
+    filtro_ebs: Optional[List[str]] = Query(None),
+    convenionombre: Optional[List[str]] = Query(None),
+    estado_cita: Optional[List[str]] = Query(None),
+    estado_consulta: Optional[List[str]] = Query(None),
+    especialidad: Optional[List[str]] = Query(None),
+    mediconombre: Optional[List[str]] = Query(None),
+    pym: Optional[List[str]] = Query(None),
+    sede: Optional[List[str]] = Query(None),
+    tipocita: Optional[List[str]] = Query(None),
     fechacita_inicio: Optional[str] = Query(None),
     fechacita_fin: Optional[str] = Query(None)
 ):
@@ -164,6 +166,35 @@ async def get_details(
         fechacita_inicio=fechacita_inicio,
         fechacita_fin=fechacita_fin
     )
+
+    # Ordenamiento global antes de paginar
+    if sort_by:
+        col_target = sort_by
+        if sort_by in ['fechacita_str', 'fechacita']:
+            col_target = 'fechacita'
+        elif sort_by in ['fechaasignacion_str', 'fechaasignacion']:
+            col_target = 'fechaasignacion'
+        elif sort_by in ['fechadeseada_str', 'fechadeseada']:
+            col_target = 'fechadeseada'
+        elif sort_by in ['fechaatencion_str', 'fechaatencion']:
+            col_target = 'fechaatencion'
+        elif sort_by == 'medico':
+            col_target = 'mediconombre'
+
+        if col_target in filtered_df.columns:
+            ascending = True if (sort_order or 'asc').lower() == 'asc' else False
+            if 'fecha' in col_target:
+                filtered_df['_sort_col'] = pd.to_datetime(filtered_df[col_target], errors='coerce')
+                filtered_df = filtered_df.sort_values(by='_sort_col', ascending=ascending, na_position='last')
+                filtered_df = filtered_df.drop(columns=['_sort_col'])
+            elif col_target in ['id', 'dias_en_sala', 'dias_espera']:
+                filtered_df['_sort_col'] = pd.to_numeric(filtered_df[col_target], errors='coerce')
+                filtered_df = filtered_df.sort_values(by='_sort_col', ascending=ascending, na_position='last')
+                filtered_df = filtered_df.drop(columns=['_sort_col'])
+            else:
+                filtered_df['_sort_col'] = filtered_df[col_target].astype(str).str.upper()
+                filtered_df = filtered_df.sort_values(by='_sort_col', ascending=ascending, na_position='last')
+                filtered_df = filtered_df.drop(columns=['_sort_col'])
 
     total_records = len(filtered_df)
     start_idx = (page - 1) * limit

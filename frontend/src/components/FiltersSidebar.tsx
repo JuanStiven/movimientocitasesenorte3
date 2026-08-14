@@ -3,19 +3,20 @@
 import React from 'react';
 import { Filter, RotateCcw, Calendar, CheckSquare, Stethoscope, Building, ShieldAlert, User, Clock, Bookmark, FileText } from 'lucide-react';
 import { SearchableSelect } from './SearchableSelect';
+import { MultiSearchableSelect } from './MultiSearchableSelect';
 
 interface FiltersSidebarProps {
   filtersOptions: any;
   selectedFilters: {
-    filtro_ebs: string;
-    convenionombre: string;
-    estado_cita: string;
-    estado_consulta: string;
-    especialidad: string;
-    mediconombre: string;
-    pym: string;
-    sede: string;
-    tipocita: string;
+    filtro_ebs: string | string[];
+    convenionombre: string[];
+    estado_cita: string[];
+    estado_consulta: string[];
+    especialidad: string[];
+    mediconombre: string[];
+    pym: string[];
+    sede: string[];
+    tipocita: string[];
     nombrecompleto: string;
     fechacita_inicio: string;
     fechacita_fin: string;
@@ -84,76 +85,76 @@ export const FiltersSidebar: React.FC<FiltersSidebarProps> = ({
         label="Filtro EBS (Equipos Básicos)"
         icon={<CheckSquare className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />}
         options={filtersOptions?.filtro_ebs || ['Todas', 'Si', 'No']}
-        value={selectedFilters.filtro_ebs}
+        value={typeof selectedFilters.filtro_ebs === 'string' ? selectedFilters.filtro_ebs : 'Todas'}
         onChange={(val) => onFilterChange('filtro_ebs', val)}
       />
 
       {/* 3. Convenio Nombre */}
-      <SearchableSelect
+      <MultiSearchableSelect
         label="Convenio (convenionombre)"
         icon={<FileText className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />}
         options={filtersOptions?.convenionombre || ['Todas']}
-        value={selectedFilters.convenionombre}
+        selectedValues={Array.isArray(selectedFilters.convenionombre) ? selectedFilters.convenionombre : ['Todas']}
         onChange={(val) => onFilterChange('convenionombre', val)}
       />
 
       {/* 4. Estado Cita */}
-      <SearchableSelect
+      <MultiSearchableSelect
         label="Estado Cita (estado_cita)"
         options={filtersOptions?.estado_cita || ['Todas']}
-        value={selectedFilters.estado_cita}
+        selectedValues={Array.isArray(selectedFilters.estado_cita) ? selectedFilters.estado_cita : ['Todas']}
         onChange={(val) => onFilterChange('estado_cita', val)}
       />
 
       {/* 5. Estado Consulta */}
-      <SearchableSelect
+      <MultiSearchableSelect
         label="Estado Consulta (estado_consulta)"
         options={filtersOptions?.estado_consulta || ['Todas']}
-        value={selectedFilters.estado_consulta}
+        selectedValues={Array.isArray(selectedFilters.estado_consulta) ? selectedFilters.estado_consulta : ['Todas']}
         onChange={(val) => onFilterChange('estado_consulta', val)}
       />
 
       {/* 6. Tipo Cita */}
-      <SearchableSelect
+      <MultiSearchableSelect
         label="Tipo de Cita (tipocita)"
         options={filtersOptions?.tipocita || ['Todas']}
-        value={selectedFilters.tipocita}
+        selectedValues={Array.isArray(selectedFilters.tipocita) ? selectedFilters.tipocita : ['Todas']}
         onChange={(val) => onFilterChange('tipocita', val)}
       />
 
       {/* 7. Especialidad */}
-      <SearchableSelect
+      <MultiSearchableSelect
         label="Especialidad (medicoespecialidad)"
         icon={<Stethoscope className="h-3.5 w-3.5 text-primary-600 dark:text-primary-400" />}
         options={filtersOptions?.especialidad || ['Todas']}
-        value={selectedFilters.especialidad}
+        selectedValues={Array.isArray(selectedFilters.especialidad) ? selectedFilters.especialidad : ['Todas']}
         onChange={(val) => onFilterChange('especialidad', val)}
       />
 
       {/* 8. Médico / Profesional */}
-      <SearchableSelect
+      <MultiSearchableSelect
         label="Médico / Profesional (mediconombre)"
         icon={<User className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />}
         options={filtersOptions?.mediconombre || ['Todas']}
-        value={selectedFilters.mediconombre}
+        selectedValues={Array.isArray(selectedFilters.mediconombre) ? selectedFilters.mediconombre : ['Todas']}
         onChange={(val) => onFilterChange('mediconombre', val)}
       />
 
       {/* 9. PYM / Programa */}
-      <SearchableSelect
+      <MultiSearchableSelect
         label="Programa / PYM (pym)"
         icon={<Bookmark className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />}
         options={filtersOptions?.pym || ['Todas']}
-        value={selectedFilters.pym}
+        selectedValues={Array.isArray(selectedFilters.pym) ? selectedFilters.pym : ['Todas']}
         onChange={(val) => onFilterChange('pym', val)}
       />
 
       {/* 10. Sede */}
-      <SearchableSelect
+      <MultiSearchableSelect
         label="Sede / Centro (nombresede)"
         icon={<Building className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />}
         options={filtersOptions?.sede || ['Todas']}
-        value={selectedFilters.sede}
+        selectedValues={Array.isArray(selectedFilters.sede) ? selectedFilters.sede : ['Todas']}
         onChange={(val) => onFilterChange('sede', val)}
       />
 

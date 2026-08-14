@@ -17,6 +17,8 @@ services:
   backend:
     build: ./backend
     restart: unless-stopped
+    ports:
+      - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -29,6 +31,8 @@ services:
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     restart: unless-stopped
+    ports:
+      - "3000:3000"
     depends_on:
       - backend
     environment:

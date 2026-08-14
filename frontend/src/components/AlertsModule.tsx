@@ -1,7 +1,7 @@
-'use client';
-
 import React from 'react';
 import { AlertTriangle, ShieldAlert, CheckCircle2, Search, Download } from 'lucide-react';
+import { useSortableData } from '@/utils/useSortableData';
+import { SortableHeader } from './SortableHeader';
 
 interface AlertsModuleProps {
   alerts: any[];
@@ -10,7 +10,7 @@ interface AlertsModuleProps {
 export const AlertsModule: React.FC<AlertsModuleProps> = ({ alerts = [] }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
 
-  const filteredAlerts = React.useMemo(() => {
+  const rawAlerts = React.useMemo(() => {
     if (!alerts) return [];
     if (!searchTerm) return alerts;
     const term = searchTerm.toLowerCase();
@@ -21,6 +21,8 @@ export const AlertsModule: React.FC<AlertsModuleProps> = ({ alerts = [] }) => {
         a.sede?.toLowerCase().includes(term)
     );
   }, [alerts, searchTerm]);
+
+  const { items: filteredAlerts, requestSort, sortConfig } = useSortableData(rawAlerts);
 
   // Exportar a CSV la tabla LISTADO DETALLADO DE CITAS EN ALERTA
   const handleExportCSV = () => {
@@ -129,15 +131,15 @@ export const AlertsModule: React.FC<AlertsModuleProps> = ({ alerts = [] }) => {
           <table className="w-full text-left border-collapse text-xs min-w-[750px]">
             <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold sticky top-0 border-b border-slate-200 dark:border-slate-700">
               <tr>
-                <th className="p-3 text-center">ID</th>
-                <th className="p-3">Médico / Profesional</th>
-                <th className="p-3">Especialidad</th>
-                <th className="p-3">Sede</th>
-                <th className="p-3 text-center">Estado Cita</th>
-                <th className="p-3 text-center">Estado Consulta</th>
-                <th className="p-3 text-center">Días en Sala</th>
-                <th className="p-3 text-center">Fecha Cita</th>
-                <th className="p-3 text-center">Fecha Asignación</th>
+                <SortableHeader label="ID" fieldKey="id" sortConfig={sortConfig} onSort={requestSort} align="center" />
+                <SortableHeader label="Médico / Profesional" fieldKey="medico" sortConfig={sortConfig} onSort={requestSort} />
+                <SortableHeader label="Especialidad" fieldKey="especialidad" sortConfig={sortConfig} onSort={requestSort} />
+                <SortableHeader label="Sede" fieldKey="sede" sortConfig={sortConfig} onSort={requestSort} />
+                <SortableHeader label="Estado Cita" fieldKey="estado_cita" sortConfig={sortConfig} onSort={requestSort} align="center" />
+                <SortableHeader label="Estado Consulta" fieldKey="estado_consulta" sortConfig={sortConfig} onSort={requestSort} align="center" />
+                <SortableHeader label="Días en Sala" fieldKey="dias_en_sala" sortConfig={sortConfig} onSort={requestSort} align="center" />
+                <SortableHeader label="Fecha Cita" fieldKey="fechacita_str" sortConfig={sortConfig} onSort={requestSort} align="center" />
+                <SortableHeader label="Fecha Asignación" fieldKey="fechaasignacion_str" sortConfig={sortConfig} onSort={requestSort} align="center" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

@@ -6,15 +6,15 @@ class AnalyticsEngine:
     @staticmethod
     def filter_dataframe(
         df: pd.DataFrame,
-        filtro_ebs: Optional[str] = None,
-        convenionombre: Optional[str] = None,
-        estado_cita: Optional[str] = None,
-        estado_consulta: Optional[str] = None,
-        especialidad: Optional[str] = None,
-        mediconombre: Optional[str] = None,
-        pym: Optional[str] = None,
-        sede: Optional[str] = None,
-        tipocita: Optional[str] = None,
+        filtro_ebs: Optional[Any] = None,
+        convenionombre: Optional[Any] = None,
+        estado_cita: Optional[Any] = None,
+        estado_consulta: Optional[Any] = None,
+        especialidad: Optional[Any] = None,
+        mediconombre: Optional[Any] = None,
+        pym: Optional[Any] = None,
+        sede: Optional[Any] = None,
+        tipocita: Optional[Any] = None,
         nombrecompleto: Optional[str] = None,
         fechacita_inicio: Optional[str] = None,
         fechacita_fin: Optional[str] = None,
@@ -31,41 +31,50 @@ class AnalyticsEngine:
 
         filtered = df.copy()
 
+        def apply_multi(data: pd.DataFrame, col_name: str, val: Any) -> pd.DataFrame:
+            if val is None:
+                return data
+            if isinstance(val, str):
+                val_list = [v.strip() for v in val.split(',')] if ',' in val else [val]
+            elif isinstance(val, (list, tuple, set)):
+                val_list = list(val)
+            else:
+                return data
+
+            cleaned = [str(v).strip().upper() for v in val_list if str(v).strip() and str(v).strip().upper() not in ["TODAS", "TODOS"]]
+            if not cleaned:
+                return data
+
+            if col_name in data.columns:
+                return data[data[col_name].astype(str).str.upper().isin(cleaned)]
+            return data
+
         # 1. Filtro EBS (Convenios)
-        if filtro_ebs and filtro_ebs.upper() != "TODAS":
-            filtered = filtered[filtered['filtro_ebs'].astype(str).str.upper() == filtro_ebs.upper()]
+        filtered = apply_multi(filtered, 'filtro_ebs', filtro_ebs)
 
         # 2. Convenio Nombre
-        if convenionombre and convenionombre.upper() != "TODAS":
-            filtered = filtered[filtered['convenionombre'].astype(str).str.upper() == convenionombre.upper()]
+        filtered = apply_multi(filtered, 'convenionombre', convenionombre)
 
         # 3. Estado Cita
-        if estado_cita and estado_cita.upper() != "TODAS":
-            filtered = filtered[filtered['estado_cita'].astype(str).str.upper() == estado_cita.upper()]
+        filtered = apply_multi(filtered, 'estado_cita', estado_cita)
 
         # 4. Estado Consulta
-        if estado_consulta and estado_consulta.upper() != "TODAS":
-            filtered = filtered[filtered['estado_consulta'].astype(str).str.upper() == estado_consulta.upper()]
+        filtered = apply_multi(filtered, 'estado_consulta', estado_consulta)
 
         # 5. Especialidad (medicoespecialidad)
-        if especialidad and especialidad.upper() != "TODAS":
-            filtered = filtered[filtered['especialidad'].astype(str).str.upper() == especialidad.upper()]
+        filtered = apply_multi(filtered, 'especialidad', especialidad)
 
         # 6. Médico Nombre (mediconombre)
-        if mediconombre and mediconombre.upper() != "TODAS":
-            filtered = filtered[filtered['mediconombre'].astype(str).str.upper() == mediconombre.upper()]
+        filtered = apply_multi(filtered, 'mediconombre', mediconombre)
 
         # 7. PYM / Programa
-        if pym and pym.upper() != "TODAS":
-            filtered = filtered[filtered['pym'].astype(str).str.upper() == pym.upper()]
+        filtered = apply_multi(filtered, 'pym', pym)
 
-        # 8. Sede (nombresede)
-        if sede and sede.upper() != "TODAS":
-            filtered = filtered[filtered['sede'].astype(str).str.upper() == sede.upper()]
+        # 8. Sede (nombresede / sede)
+        filtered = apply_multi(filtered, 'sede', sede)
 
         # 9. Tipo Cita (tipocita)
-        if tipocita and tipocita.upper() != "TODAS":
-            filtered = filtered[filtered['tipocita'].astype(str).str.upper() == tipocita.upper()]
+        filtered = apply_multi(filtered, 'tipocita', tipocita)
 
         # 10. Búsqueda Paciente (nombrecompleto)
         if nombrecompleto:

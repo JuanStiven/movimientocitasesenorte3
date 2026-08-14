@@ -1,7 +1,7 @@
-'use client';
-
 import React from 'react';
 import { UserCheck, Stethoscope, Bookmark, Search, Download } from 'lucide-react';
+import { useSortableData } from '@/utils/useSortableData';
+import { SortableHeader } from './SortableHeader';
 
 interface PersonalAnalysisProps {
   personalData: {
@@ -14,13 +14,24 @@ interface PersonalAnalysisProps {
 export const PersonalAnalysis: React.FC<PersonalAnalysisProps> = ({ personalData }) => {
   const [searchDoctor, setSearchDoctor] = React.useState('');
 
-  const filteredDoctors = React.useMemo(() => {
+  const rawDoctors = React.useMemo(() => {
     if (!personalData?.personal_asistencial) return [];
     if (!searchDoctor) return personalData.personal_asistencial;
     return personalData.personal_asistencial.filter((doc: any) =>
       doc.medico?.toLowerCase().includes(searchDoctor.toLowerCase())
     );
   }, [personalData, searchDoctor]);
+
+  // Hook ordenamiento Tabla 1: Personal Asistencial
+  const { items: filteredDoctors, requestSort: sortDoctors, sortConfig: sortConfigDoctors } = useSortableData(rawDoctors);
+
+  // Hook ordenamiento Tabla 2: Especialidades
+  const rawEspecialidades = personalData?.especialidades || [];
+  const { items: sortedEspecialidades, requestSort: sortEspecialidades, sortConfig: sortConfigEspecialidades } = useSortableData(rawEspecialidades);
+
+  // Hook ordenamiento Tabla 3: Programas / PYM
+  const rawProgramas = personalData?.programas || [];
+  const { items: sortedProgramas, requestSort: sortProgramas, sortConfig: sortConfigProgramas } = useSortableData(rawProgramas);
 
   // Exportar a CSV la tabla CITAS ASIGNADAS POR PERSONAL ASISTENCIAL
   const handleExportCSV = () => {
@@ -95,12 +106,12 @@ export const PersonalAnalysis: React.FC<PersonalAnalysisProps> = ({ personalData
           <table className="w-full text-left border-collapse text-xs min-w-[650px]">
             <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold sticky top-0 border-b border-slate-200 dark:border-slate-700">
               <tr>
-                <th className="p-2.5 sm:p-3">Médico / Profesional</th>
-                <th className="p-2.5 sm:p-3 text-center">Total Citas</th>
-                <th className="p-2.5 sm:p-3 text-center">Finalizadas</th>
-                <th className="p-2.5 sm:p-3 text-center">En Sala</th>
-                <th className="p-2.5 sm:p-3 text-center">Descartadas</th>
-                <th className="p-2.5 sm:p-3 text-center">En Blanco</th>
+                <SortableHeader label="Médico / Profesional" fieldKey="medico" sortConfig={sortConfigDoctors} onSort={sortDoctors} />
+                <SortableHeader label="Total Citas" fieldKey="total" sortConfig={sortConfigDoctors} onSort={sortDoctors} align="center" />
+                <SortableHeader label="Finalizadas" fieldKey="finalizadas" sortConfig={sortConfigDoctors} onSort={sortDoctors} align="center" />
+                <SortableHeader label="En Sala" fieldKey="en_sala" sortConfig={sortConfigDoctors} onSort={sortDoctors} align="center" />
+                <SortableHeader label="Descartadas" fieldKey="descartada" sortConfig={sortConfigDoctors} onSort={sortDoctors} align="center" />
+                <SortableHeader label="En Blanco" fieldKey="en_blanco" sortConfig={sortConfigDoctors} onSort={sortDoctors} align="center" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -148,15 +159,15 @@ export const PersonalAnalysis: React.FC<PersonalAnalysisProps> = ({ personalData
             <table className="w-full text-left border-collapse text-xs min-w-[450px]">
               <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold sticky top-0 border-b border-slate-200 dark:border-slate-700">
                 <tr>
-                  <th className="p-2.5">Especialidad</th>
-                  <th className="p-2.5 text-center">Total</th>
-                  <th className="p-2.5 text-center">Fin.</th>
-                  <th className="p-2.5 text-center">Sala</th>
-                  <th className="p-2.5 text-center">Prom. Espera</th>
+                  <SortableHeader label="Especialidad" fieldKey="especialidad" sortConfig={sortConfigEspecialidades} onSort={sortEspecialidades} />
+                  <SortableHeader label="Total" fieldKey="total" sortConfig={sortConfigEspecialidades} onSort={sortEspecialidades} align="center" />
+                  <SortableHeader label="Fin." fieldKey="finalizadas" sortConfig={sortConfigEspecialidades} onSort={sortEspecialidades} align="center" />
+                  <SortableHeader label="Sala" fieldKey="en_sala" sortConfig={sortConfigEspecialidades} onSort={sortEspecialidades} align="center" />
+                  <SortableHeader label="Prom. Espera" fieldKey="promedio_dias_espera" sortConfig={sortConfigEspecialidades} onSort={sortEspecialidades} align="center" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {personalData?.especialidades?.map((esp: any, idx: number) => (
+                {sortedEspecialidades.map((esp: any, idx: number) => (
                   <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/60">
                     <td className="p-2.5 font-medium text-slate-800 dark:text-slate-200 truncate max-w-[200px]" title={esp.especialidad}>
                       {esp.especialidad}
@@ -188,14 +199,14 @@ export const PersonalAnalysis: React.FC<PersonalAnalysisProps> = ({ personalData
             <table className="w-full text-left border-collapse text-xs min-w-[400px]">
               <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold sticky top-0 border-b border-slate-200 dark:border-slate-700">
                 <tr>
-                  <th className="p-2.5">Programa / PYM</th>
-                  <th className="p-2.5 text-center">Total Citas</th>
+                  <SortableHeader label="Programa / PYM" fieldKey="pym" sortConfig={sortConfigProgramas} onSort={sortProgramas} />
+                  <SortableHeader label="Total Citas" fieldKey="total" sortConfig={sortConfigProgramas} onSort={sortProgramas} align="center" />
                   <th className="p-2.5 text-right">Porcentaje</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {personalData?.programas?.map((prog: any, idx: number) => {
-                  const totalGlobal = personalData.programas.reduce((acc: number, curr: any) => acc + curr.total, 0);
+                {sortedProgramas.map((prog: any, idx: number) => {
+                  const totalGlobal = rawProgramas.reduce((acc: number, curr: any) => acc + curr.total, 0);
                   const pct = totalGlobal ? Math.round((prog.total / totalGlobal) * 100) : 0;
                   return (
                     <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/60">

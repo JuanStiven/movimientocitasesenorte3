@@ -88,18 +88,21 @@ class DataProcessor:
                 df = pd.read_excel(io.BytesIO(file_bytes))
 
             clean_df = self.normalize_dataframe(df)
-            self.current_df = clean_df
 
             # Guardar/Persistir en PostgreSQL usando UPSERT por agendacita_id
             db = SessionLocal()
             import_result = DBImporter.import_dataframe(clean_df, db)
             db.close()
 
-            citas_count = len(clean_df)
+            # Refrescar desde la base de datos PostgreSQL para acumular todos los insumos cargados
+            self.current_df = None
+            accumulated_df = self.get_dataframe()
+            total_citas_count = len(accumulated_df)
+
             self.dataset_metadata = {
-                "file_name": filename,
+                "file_name": f"PostgreSQL Acumulado ({filename})",
                 "upload_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "total_records": citas_count
+                "total_records": total_citas_count
             }
             return {
                 "success": True,
