@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía de usuario — Reporte Citas · ESE NORTE 3</title>
+<style>
+  :root {
+    --azul: #0f4c81;
+    --azul-claro: #e8f1fa;
+    --verde: #1e7e46;
+    --rojo: #b3261e;
+    --ambar: #8a6d1a;
+    --gris: #5f6b7a;
+    --fondo: #f5f7fa;
+    --borde: #d8e0ea;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+    background: var(--fondo);
+    color: #1c2733;
+    line-height: 1.6;
+  }
+  .portada {
+    background: linear-gradient(135deg, #0f4c81 0%, #1669a8 60%, #1e7e8c 100%);
+    color: #fff;
+    padding: 3.2rem 1.5rem 2.8rem;
+    text-align: center;
+  }
+  .portada .sello {
+    display: inline-block;
+    background: rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.4);
+    border-radius: 999px;
+    padding: .35rem 1.2rem;
+    font-size: .85rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    margin-bottom: 1.2rem;
+  }
+  .portada h1 { font-size: 2.1rem; font-weight: 700; margin-bottom: .4rem; }
+  .portada p { font-size: 1.05rem; opacity: .92; max-width: 720px; margin: 0 auto; }
+  .contenedor { max-width: 960px; margin: 0 auto; padding: 2rem 1.2rem 4rem; }
+  .indice {
+    background: #fff;
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    padding: 1.4rem 1.8rem;
+    margin-bottom: 2.4rem;
+  }
+  .indice h2 { font-size: 1.05rem; color: var(--azul); margin-bottom: .8rem; }
+  .indice ol { padding-left: 1.4rem; columns: 2; column-gap: 2.5rem; }
+  .indice li { margin-bottom: .35rem; }
+  .indice a { color: var(--azul); text-decoration: none; }
+  .indice a:hover { text-decoration: underline; }
+  section {
+    background: #fff;
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    padding: 1.8rem 2rem;
+    margin-bottom: 2rem;
+  }
+  h2.seccion {
+    font-size: 1.35rem;
+    color: var(--azul);
+    border-left: 5px solid var(--azul);
+    padding-left: .8rem;
+    margin-bottom: 1rem;
+  }
+  h3 { font-size: 1.05rem; color: #1c2733; margin: 1.1rem 0 .5rem; }
+  p { margin-bottom: .8rem; }
+  ul, ol { margin: 0 0 1rem 1.4rem; }
+  li { margin-bottom: .35rem; }
+  figure {
+    margin: 1.2rem 0;
+    text-align: center;
+  }
+  figure img {
+    max-width: 100%;
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(15,76,129,.12);
+  }
+  figcaption {
+    font-size: .82rem;
+    color: var(--gris);
+    margin-top: .5rem;
+  }
+  .nota {
+    background: var(--azul-claro);
+    border-left: 4px solid var(--azul);
+    border-radius: 8px;
+    padding: .9rem 1.2rem;
+    margin: 1.2rem 0;
+    font-size: .95rem;
+  }
+  .nota.verde { background: #e9f6ee; border-left-color: var(--verde); }
+  .nota.roja  { background: #fdeeec; border-left-color: var(--rojo); }
+  .nota.ambar { background: #fdf6e3; border-left-color: var(--ambar); }
+  .pasos { counter-reset: paso; list-style: none; padding-left: 0; }
+  .pasos li {
+    counter-increment: paso;
+    position: relative;
+    padding-left: 2.6rem;
+    margin-bottom: .8rem;
+  }
+  .pasos li::before {
+    content: counter(paso);
+    position: absolute;
+    left: 0; top: 0;
+    width: 1.8rem; height: 1.8rem;
+    background: var(--azul);
+    color: #fff;
+    border-radius: 50%;
+    text-align: center;
+    font-size: .9rem;
+    font-weight: 700;
+    line-height: 1.8rem;
+  }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .92rem; }
+  th, td { border: 1px solid var(--borde); padding: .6rem .8rem; text-align: left; }
+  th { background: var(--azul-claro); color: var(--azul); }
+  .chip {
+    display: inline-block;
+    padding: .15rem .7rem;
+    border-radius: 999px;
+    font-size: .78rem;
+    font-weight: 600;
+    margin-right: .3rem;
+  }
+  .chip.verde { background: #e9f6ee; color: var(--verde); }
+  .chip.roja  { background: #fdeeec; color: var(--rojo); }
+  .chip.ambar { background: #fdf6e3; color: var(--ambar); }
+  .chip.azul  { background: var(--azul-claro); color: var(--azul); }
+  footer {
+    text-align: center;
+    color: var(--gris);
+    font-size: .85rem;
+    padding: 1.5rem 1rem 3rem;
+  }
+  @media (max-width: 640px) {
+    .indice ol { columns: 1; }
+    .portada h1 { font-size: 1.6rem; }
+    section { padding: 1.3rem 1.1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="portada">
+  <span class="sello">E.S.E. Norte 3</span>
+  <h1>Reporte Citas — Guía de usuario</h1>
+  <p>Sistema de analítica del movimiento de citas médicas: importe sus datos diarios, consulte indicadores, detecte alertas y exporte reportes, todo desde un solo tablero.</p>
+</div>
+
+<div class="contenedor">
+
+  <div class="indice">
+    <h2>Contenido</h2>
+    <ol>
+      <li><a href="#que-es">¿Qué es Reporte Citas?</a></li>
+      <li><a href="#ingreso">Cómo ingresar</a></li>
+      <li><a href="#pantalla">La pantalla principal</a></li>
+      <li><a href="#analisis-general">Análisis General</a></li>
+      <li><a href="#personal">Personal Asistencial</a></li>
+      <li><a href="#alertas">Alertas Sala</a></li>
+      <li><a href="#detalle">Detalle Citas</a></li>
+      <li><a href="#cargar">Cargar Insumo (importación diaria)</a></li>
+      <li><a href="#usuarios">Gestión de Usuarios</a></li>
+      <li><a href="#consejos">Consejos y buenas prácticas</a></li>
+      <li><a href="#faq">Preguntas frecuentes</a></li>
+    </ol>
+  </div>
+
+  <!-- 1. Qué es -->
+  <section id="que-es">
+    <h2 class="seccion">1. ¿Qué es Reporte Citas?</h2>
+    <p>Reporte Citas es el tablero de analítica de la ESE Norte 3 que reemplaza la vista de Power BI (<em>"Análisis General Asignación de Citas"</em> y <em>"Análisis Personal Asistencial"</em>). Permite hacer seguimiento al movimiento de citas médicas a partir del cargue diario de los archivos insumo (Excel/CSV).</p>
+    <h3>¿Para qué le sirve?</h3>
+    <ul>
+      <li><strong>Consultar indicadores</strong> de asignación y atención de citas por sede, convenio y especialidad.</li>
+      <li><strong>Detectar alertas</strong>: citas que llevan más de 3 días en estado <em>EN SALA</em>.</li>
+      <li><strong>Analizar el desempeño</strong> del personal asistencial.</li>
+      <li><strong>Exportar reportes</strong> en CSV para gerencia y toma de decisiones.</li>
+      <li><strong>Importar datos diariamente</strong> sin depender de procesos manuales.</li>
+    </ul>
+    <div class="nota verde">✅ <strong>Ventaja:</strong> los datos quedan guardados en base de datos (acumulado histórico), no se pierden al cambiar de archivo ni dependen de una conexión a Power BI.</div>
+  </section>
+
+  <!-- 2. Ingreso -->
+  <section id="ingreso">
+    <h2 class="seccion">2. Cómo ingresar</h2>
+    <ol class="pasos">
+      <li>Abra su navegador (Chrome, Edge o Firefox) e ingrese a la dirección del sistema: <strong>http://reportecitas.esenorte3.lat</strong></li>
+      <li>Escriba su <strong>usuario</strong> y su <strong>contraseña</strong>.</li>
+      <li>Presione el botón <strong>“Iniciar Sesión”</strong>.</li>
+    </ol>
+    <div class="nota ambar">🔐 Si no recuerda su contraseña, solicítela al administrador del sistema o al área de sistemas de la ESE. Por seguridad, no comparta sus credenciales con otras personas.</div>
+  </section>
+
+  <!-- 3. Pantalla principal -->
+  <section id="pantalla">
+    <h2 class="seccion">3. La pantalla principal</h2>
+    <p>Al ingresar encontrará una barra superior con las secciones del sistema. Todas las secciones trabajan con el mismo archivo de datos cargado:</p>
+    <table>
+      <tr><th>Sección</th><th>¿Qué hace?</th></tr>
+      <tr><td><strong>Análisis General</strong></td><td>Indicadores globales y gráficos del movimiento de citas.</td></tr>
+      <tr><td><strong>Personal Asistencial</strong></td><td>Desempeño y producción por médico / personal.</td></tr>
+      <tr><td><strong>Alertas Sala</strong></td><td>Citas con más de 3 días en estado <em>EN SALA</em>.</td></tr>
+      <tr><td><strong>Detalle Citas</strong></td><td>Listado detallado de citas con búsqueda y paginación.</td></tr>
+      <tr><td><strong>Cargar Insumo</strong></td><td>Importación del archivo diario (Excel/CSV).</td></tr>
+      <tr><td><strong>Gestión de Usuarios</strong></td><td>Crear y administrar usuarios del sistema (solo administradores).</td></tr>
+    </table>
+    <div class="nota">💡 Use el botón <strong>“Cambiar a Modo Oscuro”</strong> si prefiere una vista de menor brillo para trabajar.</div>
+  </section>
+
+  <!-- 4. Análisis General -->
+  <section id="analisis-general">
+    <h2 class="seccion">4. Análisis General</h2>
+    <p>Es la vista principal del sistema. Muestra el panorama del movimiento de citas con indicadores y gráficos (barras, tortas y tendencias).</p>
+    <figure>
+      <img src="img/01-analisis-general.png" alt="Vista Análisis General del sistema Reporte Citas">
+      <figcaption>Vista “Análisis General”: indicadores y gráficos del movimiento de citas.</figcaption>
+    </figure>
+    <h3>Cómo usarla</h3>
+    <ol class="pasos">
+      <li>Presione el botón <strong>“Abrir/Cerrar Filtros”</strong> para mostrar las opciones de filtrado (por fechas, sede, convenio, estado, etc.).</li>
+      <li>Seleccione los valores que necesita y el tablero se actualizará automáticamente.</li>
+      <li>Revise los indicadores superiores: total de citas, asignadas, atendidas, pendientes y porcentajes clave.</li>
+      <li>Analice los gráficos para identificar el comportamiento de la demanda.</li>
+    </ol>
+    <div class="nota verde">✅ <strong>Consejo:</strong> combine filtros de fechas y sede para comparar periodos o territorios específicos.</div>
+  </section>
+
+  <!-- 5. Personal Asistencial -->
+  <section id="personal">
+    <h2 class="seccion">5. Personal Asistencial</h2>
+    <p>Permite consultar la producción y el desempeño de cada médico o profesional de salud.</p>
+    <figure>
+      <img src="img/02-personal-asistencial.png" alt="Vista Personal Asistencial del sistema Reporte Citas">
+      <figcaption>Vista “Personal Asistencial”: producción por profesional.</figcaption>
+    </figure>
+    <ol class="pasos">
+      <li>Use el buscador <strong>“Buscar por nombre de médico…”</strong> para localizar a un profesional.</li>
+      <li>Consulte sus indicadores: citas asignadas, atendidas, ausencias y cumplimiento.</li>
+      <li>Presione <strong>“Exportar CSV”</strong> para descargar la información en Excel.</li>
+    </ol>
+  </section>
+
+  <!-- 6. Alertas Sala -->
+  <section id="alertas">
+    <h2 class="seccion">6. Alertas Sala</h2>
+    <p>Esta sección resalta automáticamente las citas que llevan <strong>más de 3 días en estado <em>EN SALA</em></strong>, para que el equipo pueda intervenirlas a tiempo.</p>
+    <figure>
+      <img src="img/03-alertas-sala.png" alt="Vista Alertas Sala del sistema Reporte Citas">
+      <figcaption>Vista “Alertas Sala”: citas demoradas en sala destacadas para seguimiento.</figcaption>
+    </figure>
+    <div class="nota roja">⚠️ <strong>Importante:</strong> estas alertas se generan de forma automática con los datos cargados. Si una cita aparece en alerta, debe gestionarse con el área responsable de salas.</div>
+  </section>
+
+  <!-- 7. Detalle Citas -->
+  <section id="detalle">
+    <h2 class="seccion">7. Detalle Citas</h2>
+    <p>Listado completo y paginado de las citas, ideal para búsquedas puntuales o auditoría de casos específicos.</p>
+    <figure>
+      <img src="img/04-detalle-citas.png" alt="Vista Detalle Citas del sistema Reporte Citas">
+      <figcaption>Vista “Detalle Citas”: listado con búsqueda, paginación y exportación.</figcaption>
+    </figure>
+    <ol class="pasos">
+      <li>Use el buscador <strong>“Buscar por paciente, médico o sede…”</strong>.</li>
+      <li>Navegue entre páginas con los botones de paginación (el total de registros se muestra en pantalla).</li>
+      <li>Presione <strong>“Exportar CSV”</strong> para descargar el detalle filtrado.</li>
+    </ol>
+  </section>
+
+  <!-- 8. Cargar Insumo -->
+  <section id="cargar">
+    <h2 class="seccion">8. Cargar Insumo (importación diaria)</h2>
+    <p>Es el paso más importante del día: aquí se importa el archivo de citas (Excel o CSV) para que el tablero se actualice.</p>
+    <figure>
+      <img src="img/05-cargar-insumo.png" alt="Vista Cargar Insumo del sistema Reporte Citas">
+      <figcaption>Vista “Cargar Insumo”: importador del archivo diario.</figcaption>
+    </figure>
+    <ol class="pasos">
+      <li>Vaya a la sección <strong>“Cargar Insumo”</strong>.</li>
+      <li>Seleccione el archivo del día (Excel o CSV) con el botón de importación.</li>
+      <li>El sistema reconoce automáticamente las columnas del archivo (mapeo automático).</li>
+      <li>Confirme la importación. Los datos quedan acumulados en la base de datos.</li>
+      <li>Verifique que las demás secciones (Análisis General, Alertas, etc.) reflejen la información nueva.</li>
+    </ol>
+    <div class="nota ambar">📄 <strong>Formato:</strong> utilice el mismo formato de archivo insumo que se entrega diariamente (columnas de convenios EBS, estado de cita, estado de consulta, especialidad, entre otras).</div>
+    <div class="nota verde">✅ <strong>Consejo:</strong> cargue el insumo todos los días al inicio de la jornada para que los indicadores y alertas estén siempre al día.</div>
+  </section>
+
+  <!-- 9. Gestión de Usuarios -->
+  <section id="usuarios">
+    <h2 class="seccion">9. Gestión de Usuarios</h2>
+    <p>Disponible para administradores: permite crear cuentas, asignar roles y controlar quién ingresa al sistema.</p>
+    <figure>
+      <img src="img/06-gestion-usuarios.png" alt="Vista Gestión de Usuarios del sistema Reporte Citas">
+      <figcaption>Vista “Gestión de Usuarios”: administración de cuentas y roles.</figcaption>
+    </figure>
+    <ol class="pasos">
+      <li>Ingrese a <strong>“Gestión de Usuarios”</strong> desde el menú superior.</li>
+      <li>Presione el botón para <strong>crear un nuevo usuario</strong>.</li>
+      <li>Diligencie los datos (nombre, usuario, contraseña y rol).</li>
+      <li>Guarde los cambios. El nuevo usuario podrá iniciar sesión de inmediato.</li>
+    </ol>
+    <div class="nota roja">⚠️ Solo los usuarios con rol de <strong>administrador</strong> pueden crear o modificar cuentas. Las contraseñas se almacenan de forma segura.</div>
+  </section>
+
+  <!-- 10. Consejos -->
+  <section id="consejos">
+    <h2 class="seccion">10. Consejos y buenas prácticas</h2>
+    <ul>
+      <li><strong>Cargue el insumo a diario</strong> para mantener los indicadores y alertas actualizados.</li>
+      <li><strong>Revise las Alertas Sala</strong> cada mañana para intervenir a tiempo las citas demoradas.</li>
+      <li><strong>Use los filtros</strong> para comparar sedes, convenios y especialidades; no se quede solo con el total general.</li>
+      <li><strong>Exporte el CSV</strong> cuando necesite trabajar la información en Excel o compartirla con Gerencia.</li>
+      <li><strong>Cierre sesión</strong> cuando termine de usar el sistema, especialmente en computadores compartidos.</li>
+    </ul>
+  </section>
+
+  <!-- 11. FAQ -->
+  <section id="faq">
+    <h2 class="seccion">11. Preguntas frecuentes</h2>
+    <h3>¿Cada cuánto se actualizan los datos?</h3>
+    <p>Los datos se actualizan cada vez que se <strong>carga el insumo</strong> del día. El sistema conserva el acumulado histórico en base de datos.</p>
+    <h3>¿Qué pasa si subo un archivo con un formato diferente?</h3>
+    <p>El sistema intenta reconocer automáticamente las columnas. Si el archivo no es compatible, se mostrará un mensaje indicándole qué ajustar.</p>
+    <h3>¿Puedo recuperar el insumo anterior después de cargar uno nuevo?</h3>
+    <p>Sí. Use la opción <strong>“Recargar insumo inicial”</strong> si necesita volver a procesar el archivo de referencia.</p>
+    <h3>¿Quién puede crear usuarios?</h3>
+    <p>Únicamente los usuarios con rol de <strong>administrador</strong>.</p>
+    <h3>¿Dónde pido ayuda si tengo un problema?</h3>
+    <p>Comuníquese con el área de sistemas / soporte técnico de la ESE Norte 3 e indique el mensaje o la pantalla que le generó la novedad.</p>
+  </section>
+
+</div>
+
+<footer>
+  ESE NORTE 3 — Reporte Citas · Guía de usuario · Agosto 2026<br>
+  Sistemas de Información · Soporte: área de tecnología de la ESE
+</footer>
+
+</body>
+</html>
