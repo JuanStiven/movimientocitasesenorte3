@@ -35,11 +35,18 @@ class AnalyticsEngine:
             if val is None:
                 return data
             if isinstance(val, str):
-                val_list = [v.strip() for v in val.split(',')] if ',' in val else [val]
+                raw_list = [val]
             elif isinstance(val, (list, tuple, set)):
-                val_list = list(val)
+                raw_list = list(val)
             else:
                 return data
+
+            # Expandir valores concatenados por coma. FastAPI entrega los parámetros
+            # repetidos como list[str], pero si el cliente envía "A,B" en un solo
+            # parámetro la lista llega con un único elemento y hay que separarlo.
+            val_list = []
+            for item in raw_list:
+                val_list.extend(str(item).split(','))
 
             cleaned = [str(v).strip().upper() for v in val_list if str(v).strip() and str(v).strip().upper() not in ["TODAS", "TODOS"]]
             if not cleaned:

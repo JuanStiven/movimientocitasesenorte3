@@ -90,22 +90,36 @@ export const DetailsTable: React.FC<DetailsTableProps> = ({
   const handleExportCSV = async () => {
     setIsExporting(true);
     try {
-      const params = new URLSearchParams({
-        page: '1',
-        limit: '100',
-        search: search || filters?.nombrecompleto || '',
-        filtro_ebs: filters?.filtro_ebs || 'Todas',
-        convenionombre: filters?.convenionombre || 'Todas',
-        estado_cita: filters?.estado_cita || 'Todas',
-        estado_consulta: filters?.estado_consulta || 'Todas',
-        especialidad: filters?.especialidad || 'Todas',
-        mediconombre: filters?.mediconombre || 'Todas',
-        pym: filters?.pym || 'Todas',
-        sede: filters?.sede || 'Todas',
-        tipocita: filters?.tipocita || 'Todas',
-        fechacita_inicio: filters?.fechacita_inicio || '',
-        fechacita_fin: filters?.fechacita_fin || '',
-      });
+      // Construir los parámetros repitiendo cada valor de los multiselect.
+      // Si se pasan arrays a URLSearchParams estos se serializan como "A,B" en un
+      // solo parámetro y el backend los trata como un valor único (0 resultados).
+      const params = new URLSearchParams();
+      const addParam = (key: string, value: any) => {
+        if (Array.isArray(value)) {
+          value.forEach((v) => {
+            if (v !== undefined && v !== null && v !== '' && v !== 'Todas') {
+              params.append(key, String(v));
+            }
+          });
+        } else if (value !== undefined && value !== null && value !== '' && value !== 'Todas') {
+          params.append(key, String(value));
+        }
+      };
+
+      params.set('page', '1');
+      params.set('limit', '100');
+      params.set('search', search || filters?.nombrecompleto || '');
+      addParam('filtro_ebs', filters?.filtro_ebs);
+      addParam('convenionombre', filters?.convenionombre);
+      addParam('estado_cita', filters?.estado_cita);
+      addParam('estado_consulta', filters?.estado_consulta);
+      addParam('especialidad', filters?.especialidad);
+      addParam('mediconombre', filters?.mediconombre);
+      addParam('pym', filters?.pym);
+      addParam('sede', filters?.sede);
+      addParam('tipocita', filters?.tipocita);
+      addParam('fechacita_inicio', filters?.fechacita_inicio);
+      addParam('fechacita_fin', filters?.fechacita_fin);
 
       if (sortBy) {
         params.set('sort_by', sortBy);
