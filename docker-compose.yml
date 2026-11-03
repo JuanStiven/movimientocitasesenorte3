@@ -25,6 +25,7 @@ services:
         condition: service_healthy
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-esenorte3_user}:${POSTGRES_PASSWORD:-esenorte3_password}@db:5432/${POSTGRES_DB:-esenorte3_db}
+      - SECRET_KEY=${SECRET_KEY:-cambiar-en-produccion}
 
   frontend:
     build:
