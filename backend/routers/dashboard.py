@@ -1,10 +1,45 @@
 from fastapi import APIRouter, Query
+from fastapi.responses import StreamingResponse
 from typing import Optional, List
+from datetime import date
 import pandas as pd
 from routers.upload import processor
 from services.analytics_engine import AnalyticsEngine
+from services.export_service import ExportService
 
 router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
+
+
+def _sort_dataframe(df: pd.DataFrame, sort_by: Optional[str], sort_order: Optional[str]) -> pd.DataFrame:
+    """Ordenamiento global compartido entre el detalle paginado y el export."""
+    if not sort_by:
+        return df
+
+    col_target = sort_by
+    if sort_by in ['fechacita_str', 'fechacita']:
+        col_target = 'fechacita'
+    elif sort_by in ['fechaasignacion_str', 'fechaasignacion']:
+        col_target = 'fechaasignacion'
+    elif sort_by in ['fechadeseada_str', 'fechadeseada']:
+        col_target = 'fechadeseada'
+    elif sort_by in ['fechaatencion_str', 'fechaatencion']:
+        col_target = 'fechaatencion'
+    elif sort_by == 'medico':
+        col_target = 'mediconombre'
+
+    if col_target not in df.columns:
+        return df
+
+    ascending = True if (sort_order or 'asc').lower() == 'asc' else False
+    if 'fecha' in col_target:
+        df['_sort_col'] = pd.to_datetime(df[col_target], errors='coerce')
+    elif col_target in ['id', 'dias_en_sala', 'dias_espera']:
+        df['_sort_col'] = pd.to_numeric(df[col_target], errors='coerce')
+    else:
+        df['_sort_col'] = df[col_target].astype(str).str.upper()
+
+    df = df.sort_values(by='_sort_col', ascending=ascending, na_position='last')
+    return df.drop(columns=['_sort_col'])
 
 @router.get("/filters")
 async def get_filters():
@@ -168,33 +203,7 @@ async def get_details(
     )
 
     # Ordenamiento global antes de paginar
-    if sort_by:
-        col_target = sort_by
-        if sort_by in ['fechacita_str', 'fechacita']:
-            col_target = 'fechacita'
-        elif sort_by in ['fechaasignacion_str', 'fechaasignacion']:
-            col_target = 'fechaasignacion'
-        elif sort_by in ['fechadeseada_str', 'fechadeseada']:
-            col_target = 'fechadeseada'
-        elif sort_by in ['fechaatencion_str', 'fechaatencion']:
-            col_target = 'fechaatencion'
-        elif sort_by == 'medico':
-            col_target = 'mediconombre'
-
-        if col_target in filtered_df.columns:
-            ascending = True if (sort_order or 'asc').lower() == 'asc' else False
-            if 'fecha' in col_target:
-                filtered_df['_sort_col'] = pd.to_datetime(filtered_df[col_target], errors='coerce')
-                filtered_df = filtered_df.sort_values(by='_sort_col', ascending=ascending, na_position='last')
-                filtered_df = filtered_df.drop(columns=['_sort_col'])
-            elif col_target in ['id', 'dias_en_sala', 'dias_espera']:
-                filtered_df['_sort_col'] = pd.to_numeric(filtered_df[col_target], errors='coerce')
-                filtered_df = filtered_df.sort_values(by='_sort_col', ascending=ascending, na_position='last')
-                filtered_df = filtered_df.drop(columns=['_sort_col'])
-            else:
-                filtered_df['_sort_col'] = filtered_df[col_target].astype(str).str.upper()
-                filtered_df = filtered_df.sort_values(by='_sort_col', ascending=ascending, na_position='last')
-                filtered_df = filtered_df.drop(columns=['_sort_col'])
+    filtered_df = _sort_dataframe(filtered_df, sort_by, sort_order)
 
     total_records = len(filtered_df)
     start_idx = (page - 1) * limit
@@ -221,3 +230,55 @@ async def get_details(
         "total_pages": (total_records + limit - 1) // limit if total_records > 0 else 1,
         "data": records
     }
+
+
+@router.get("/export")
+async def export_details(
+    search: Optional[str] = Query(None),
+    sort_by: Optional[str] = Query(None),
+    sort_order: Optional[str] = Query("asc"),
+    filtro_ebs: Optional[List[str]] = Query(None),
+    convenionombre: Optional[List[str]] = Query(None),
+    estado_cita: Optional[List[str]] = Query(None),
+    estado_consulta: Optional[List[str]] = Query(None),
+    especialidad: Optional[List[str]] = Query(None),
+    mediconombre: Optional[List[str]] = Query(None),
+    pym: Optional[List[str]] = Query(None),
+    sede: Optional[List[str]] = Query(None),
+    tipocita: Optional[List[str]] = Query(None),
+    fechacita_inicio: Optional[str] = Query(None),
+    fechacita_fin: Optional[str] = Query(None)
+):
+    """Exporta el detalle filtrado a CSV en streaming (una sola petición)."""
+    df = processor.get_dataframe()
+    filtered_df = AnalyticsEngine.filter_dataframe(
+        df,
+        filtro_ebs=filtro_ebs,
+        convenionombre=convenionombre,
+        estado_cita=estado_cita,
+        estado_consulta=estado_consulta,
+        especialidad=especialidad,
+        mediconombre=mediconombre,
+        pym=pym,
+        sede=sede,
+        tipocita=tipocita,
+        nombrecompleto=search,
+        fechacita_inicio=fechacita_inicio,
+        fechacita_fin=fechacita_fin
+    )
+
+    filtered_df = _sort_dataframe(filtered_df, sort_by, sort_order)
+
+    total_records = len(filtered_df)
+    filename = f"detalle_movimiento_citas_esenorte3_{date.today().isoformat()}.csv"
+
+    return StreamingResponse(
+        ExportService.iter_csv(filtered_df),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "X-Total-Records": str(total_records),
+            "Access-Control-Expose-Headers": "Content-Disposition, X-Total-Records",
+            "Cache-Control": "no-store",
+        },
+    )

@@ -106,8 +106,6 @@ export const DetailsTable: React.FC<DetailsTableProps> = ({
         }
       };
 
-      params.set('page', '1');
-      params.set('limit', '100');
       params.set('search', search || filters?.nombrecompleto || '');
       addParam('filtro_ebs', filters?.filtro_ebs);
       addParam('convenionombre', filters?.convenionombre);
@@ -126,73 +124,19 @@ export const DetailsTable: React.FC<DetailsTableProps> = ({
         params.set('sort_order', sortOrder);
       }
 
-      const exportRows: any[] = [];
-      let pageNum = 1;
-      let totalRecords = 1;
-      while (exportRows.length < totalRecords && pageNum <= 10000) {
-        params.set('page', String(pageNum));
-        const res = await apiFetch(`/api/dashboard/details?${params.toString()}`);
-        if (!res.ok) {
-          throw new Error(`Error del servidor: ${res.status}`);
-        }
-        const result = await res.json();
-        totalRecords = result.total_records ?? 0;
-        exportRows.push(...(result.data || []));
-        pageNum += 1;
+      // Una sola peticion: el backend filtra y transmite el CSV en streaming.
+      const res = await apiFetch(`/api/dashboard/export?${params.toString()}`);
+      if (!res.ok) {
+        throw new Error(`Error del servidor: ${res.status}`);
       }
 
-      if (exportRows.length === 0) {
+      const totalRecordsHeader = res.headers.get('X-Total-Records');
+      if (totalRecordsHeader === '0') {
         alert("No hay registros para exportar con los filtros actuales.");
         return;
       }
 
-      const headers = [
-        'ID Cita',
-        'Paciente',
-        'Médico / Profesional',
-        'Especialidad',
-        'Sede / Centro',
-        'Convenio',
-        'Filtro EBS',
-        'Tipo Cita',
-        'Estado Cita',
-        'Estado Consulta',
-        'Fecha Cita',
-        'Fecha Deseada',
-        'Fecha Asignación',
-        'Fecha Atención',
-        'Finalidad',
-        'Programa / PYM',
-        'Días en Sala'
-      ];
-
-      const rows = exportRows.map((r: any) => [
-        r.id || '',
-        r.nombrecompleto || '',
-        r.medico || r.mediconombre || '',
-        r.especialidad || '',
-        r.sede || '',
-        r.convenionombre || '',
-        r.filtro_ebs || '',
-        r.tipocita || '',
-        r.estado_cita || '',
-        r.estado_consulta || '',
-        r.fechacita_str || '',
-        r.fechadeseada_str || '',
-        r.fechaasignacion_str || '',
-        r.fechaatencion_str || '',
-        r.finalidad || '',
-        r.pym || '',
-        r.dias_en_sala || 0
-      ]);
-
-      const BOM = '\uFEFF';
-      const csvContent = BOM + [
-        headers.join(';'),
-        ...rows.map((row: any[]) => row.map((cell) => `"${(cell ?? '').toString().replace(/"/g, '""')}"`).join(';'))
-      ].join('\n');
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.setAttribute('href', url);
@@ -200,6 +144,7 @@ export const DetailsTable: React.FC<DetailsTableProps> = ({
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     } catch (err) {
       console.error("Error al exportar CSV:", err);
       alert("No se pudo exportar el archivo CSV.");
